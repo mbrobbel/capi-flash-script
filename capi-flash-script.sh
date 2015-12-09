@@ -1,5 +1,7 @@
 #!/bin/bash
-# Usage: sudo capi-flash-script.sh <path-to-bit-file>
+# Usage:
+#   sudo capi-flash-script.sh
+#   sudo capi-flash-script.sh <path-to-bit-file>
 
 # stop on non-zero response
 set -e
@@ -11,19 +13,6 @@ normal=$(tput sgr0)
 # make sure script runs as root
 if [[ $EUID -ne 0 ]]; then
   printf "${bold}ERROR:${normal} This script must run as root\n"
-  exit 1
-fi
-
-# make sure an input argument is provided
-if [ $# -eq 0 ]; then
-  printf "${bold}ERROR:${normal} Input argument missing\n"
-  printf "Usage: sudo capi-flash-script.sh <path-to-bit-file>\n"
-  exit 1
-fi
-
-# make sure the input file exists
-if [[ ! -e $1 ]]; then
-  printf "${bold}ERROR:${normal} $1 not found\n"
   exit 1
 fi
 
@@ -71,6 +60,17 @@ while read d; do
 done < <(lspci -d "1014":"477" )
 
 printf "\n"
+
+# check for input argument
+if [ $# -eq 0 ]; then
+  exit 0
+fi
+
+# make sure the input file exists
+if [[ ! -e $1 ]]; then
+  printf "${bold}ERROR:${normal} $1 not found\n"
+  exit 1
+fi
 
 # prompt card to flash to
 while true; do
