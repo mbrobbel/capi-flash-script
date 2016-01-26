@@ -1,7 +1,11 @@
 #!/bin/bash
-# Usage:
-#   sudo capi-flash-script.sh
-#   sudo capi-flash-script.sh <path-to-bit-file>
+# Usage: sudo capi-flash-script.sh <path-to-bit-file>
+
+exit_error () {
+  printf "${bold}ERROR:${normal} $1\n"
+  rm -f $2
+  exit 1
+}
 
 # stop on non-zero response
 set -e
@@ -12,8 +16,19 @@ normal=$(tput sgr0)
 
 # make sure script runs as root
 if [[ $EUID -ne 0 ]]; then
-  printf "${bold}ERROR:${normal} This script must run as root\n"
+  exit_error "This script must run as root\n" $1
+fi
+
+# make sure an input argument is provided
+if [ $# -eq 0 ]; then
+  printf "${bold}ERROR:${normal} Input argument missing\n"
+  printf "Usage: sudo capi-flash-script.sh <path-to-bit-file>\n"
   exit 1
+fi
+
+# make sure the input file exists
+if [[ ! -e $1 ]]; then
+  exit_error "$1 not found\n" $1
 fi
 
 # make cxl dir if not present
@@ -21,8 +36,7 @@ mkdir -p /var/cxl/
 
 # mutual exclusion
 if ! mkdir /var/cxl/capi-flash-script.lock 2>/dev/null; then
-  printf "${bold}ERROR:${normal} Another instance of this script is running\n"
-  exit 1
+  exit_error "Another instance of this script is running\n" $1
 fi
 trap 'rm -rf "/var/cxl/capi-flash-script.lock"' 0
 
@@ -49,7 +63,7 @@ printf "${bold}%-7s %-30s %-29s %-20s %s${normal}\n" "#" "Card" "Flashed" "by" "
 # print card information and flash history
 i=0;
 while read d; do
-  p[$i]=`setpci -s ${d:0:12} 40C.W`;
+  p[$i]=$(cat /sys/class/cxl/card$i/psl_revision | xargs printf "%.4X");
   f=$(cat /var/cxl/card$i)
   while IFS='' read -r line || [[ -n $line ]]; do
     if [[ ${line:0:4} == ${p[$i]:0:4} ]]; then
@@ -60,17 +74,6 @@ while read d; do
 done < <(lspci -d "1014":"477" )
 
 printf "\n"
-
-# check for input argument
-if [ $# -eq 0 ]; then
-  exit 0
-fi
-
-# make sure the input file exists
-if [[ ! -e $1 ]]; then
-  printf "${bold}ERROR:${normal} $1 not found\n"
-  exit 1
-fi
 
 # prompt card to flash to
 while true; do
@@ -86,6 +89,22 @@ while true; do
     fi
   fi
 done
+
+# check if device is correct
+while IFS='' read -r line || [[ -n $line ]]; do
+  sarray=($line)
+  if [ ${sarray[0]} == ${p[$c]} ]; then
+    x=0;
+    for i in ${sarray[@]}; do
+      x=$[$x+1];
+      if [ $i == 'Altera' ] || [ $i == 'Xilinx' ]; then
+        if [ $2 != ${sarray[$x]} ]; then
+          exit_error "Device does not match input file\n" $1;
+        fi
+      fi
+    done
+  fi
+done < "$pwd/psl-revisions"
 
 printf "\n"
 
