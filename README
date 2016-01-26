@@ -1,0 +1,29 @@
+capi-flash-support README
+
+On build machine (x86):
+
+Prepare sof or bit file for CAPI flash: ./create_flash_file.sh <path-to-bit-file>
+
+Script creates .dat file with a md5sum, file type and programming file. 
+
+The .dat can be flashed to the card using sudo ./capi-flash-fpga.sh <path-to-bit-file>
+This will check the .dat file and flash it using the capi-flash-script.sh.
+
+Setup instructions
+
+The following steps are required for setup on the POWER8:
+
+- Increase eeh_max_freezes value (echo 100000 | sudo tee /sys/kernel/debug/powerpc/eeh_max_freezes)
+
+On build machine (finish POWER8 setup before configuring remote server):
+
+- Install Quartus and Vivado (need full license version for Xilinx)
+- Update  the profile quartus and vivado scripts in capi-test-script/profile.d and copy them to /etc/profile.d
+- Configure FPGA cards with CAPI image
+- Confirm CAPI cards are using PSL (ls /sys/class/cxl will list available cards)
+
+Release Notes
+
+v0.2
+ -Initial release
+
