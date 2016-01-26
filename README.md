@@ -17,3 +17,5 @@ There are four benefits from using this script rather than calling the `capi-fla
 4. This script ensures mutual exclusion.
 
 Please note that the `capi-flash` binaries should be located in the same directory as this script and should be named according to the following naming convention; `capi-flash-XXXX` where `XXXX` is the PSL revision as listed in `psl-revisions`.
+
+Please refer to the [checksum](https://github.com/mbrobbel/capi-flash-script/tree/checksum) branch for a more advanced setup with checksum support.
