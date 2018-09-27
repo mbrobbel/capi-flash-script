@@ -1,5 +1,7 @@
 # capi-flash-script
 
+**This script is now maintained by [ibm-capi](https://github.com/ibm-capi) as part of [capi-utils](https://github.com/ibm-capi/capi-utils).**
+
 Usage:
   `sudo capi-flash-script.sh`
   `sudo capi-flash-script.sh <path-to-bit-file>`
